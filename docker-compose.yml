@@ -1,0 +1,31 @@
+services:
+  postgres-tuning-demo:
+    build: .
+    container_name: pg-tuning-demo
+    environment:
+      POSTGRES_DB: tuning_demo
+      POSTGRES_USER: demo_user
+      POSTGRES_PASSWORD: demo_pass
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./demo-data:/demo-data:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U demo_user -d tuning_demo"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    shm_size: 256mb
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+        reservations:
+          memory: 1G
+
+volumes:
+  postgres_data:
