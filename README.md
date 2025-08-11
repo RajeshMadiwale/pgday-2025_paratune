@@ -9,6 +9,14 @@ A comprehensive Docker-based PostgreSQL 17 environment designed for learning and
 - Minimum 2GB RAM available
 - Basic PostgreSQL knowledge recommended
 
+
+### Git Clone
+
+```bash
+git clone https://github.com/RajeshMadiwale/pgconf-2025-lab.git
+cd pgday-2025_paratune
+```
+
 ### Installation & Setup
 ```bash
 # Recommended: One-command setup
