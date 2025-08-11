@@ -27,7 +27,6 @@ make connect
 | **Port** | 5432 |
 | **Database** | tuning_demo |
 | **Username** | demo_user |
-| **Password** | demo_pass |
 
 ## 📊 Demo Environment
 
