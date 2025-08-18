@@ -1,0 +1,6 @@
+@echo off
+echo 🚀 Starting PostgreSQL Tuning Demo...
+docker-compose up -d
+echo ⏳ Waiting for PostgreSQL to be ready...
+timeout /t 30 /nobreak >nul
+echo ✅ Demo started! Connect with: docker exec -it pg-tuning-demo psql -U demo_user -d tuning_demo

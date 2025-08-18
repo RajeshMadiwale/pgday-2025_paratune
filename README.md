@@ -4,12 +4,30 @@ A comprehensive Docker-based PostgreSQL 17 environment for mastering database pa
 
 ## 🚀 Quick Start
 
+### macOS / Linux
 ```bash
 # One-command setup
 make quick-start
 
 # Connect and start learning
 make connect
+\i /demo-data/step-by-step-tutorial.sql
+```
+
+### Windows (PowerShell/CMD)
+```powershell
+# Option 1: Use PowerShell script
+.\quick-start.ps1
+
+# Option 2: Manual commands
+docker-compose up -d
+timeout /t 30
+docker exec -it pg-tuning-demo psql -U demo_user -d tuning_demo
+
+# Option 3: Use batch file (CMD)
+quick-start.bat
+
+# In psql, start tutorial
 \i /demo-data/step-by-step-tutorial.sql
 ```
 
@@ -204,7 +222,9 @@ WHERE state = 'active' AND query_start < now() - interval '30 seconds';
 SELECT blocked.pid, blocking.pid, blocked.query 
 FROM pg_stat_activity blocked 
 JOIN pg_locks blocked_locks ON blocked.pid = blocked_locks.pid
--- ... (full blocking query)
+JOIN pg_locks blocking_locks ON blocking_locks.transactionid = blocked_locks.transactionid
+JOIN pg_stat_activity blocking ON blocking.pid = blocking_locks.pid
+WHERE blocked.pid != blocking.pid;
 ```
 
 ## 📚 Connection Info
@@ -234,22 +254,27 @@ This environment provides everything needed to become proficient in PostgreSQL p
 
 - ✅ **6 comprehensive demo tables** (885K+ records)
 - ✅ **Complete parameter tuning scenarios**
+- ✅ **Cross-platform setup** (Windows, macOS, Linux)
 - ✅ **Automated testing framework**
 - ✅ **Production monitoring tools**
 - ✅ **Interview-ready scenarios**
 - ✅ **One-command setup**
 
 **Start learning now:**
+
+**macOS/Linux:**
 ```bash
 make quick-start
 make connect
 \i /demo-data/step-by-step-tutorial.sql
 ```
 
----
+**Windows:**
+```powershell
+.\quick-start.ps1
+docker exec -it pg-tuning-demo psql -U demo_user -d tuning_demo
+\i /demo-data/step-by-step-tutorial.sql
+```
 
-## 🏆 **PRODUCTION READY**
+This PostgreSQL 17 tuning demo is complete and validated for professional use across all platforms.
 
-This PostgreSQL 17 tuning demo is complete and validated for professional use.
-
-**Final verification**: `./final-check.sh`
