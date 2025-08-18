@@ -16,6 +16,8 @@ help:
 	@echo "  make monitor    - Run comprehensive monitoring dashboard"
 	@echo "  make pgbadger   - Generate pgBadger log analysis report"
 	@echo "  make enable-stats - Enable pg_stat_statements for query analysis"
+	@echo "  make validate   - Validate all use cases and functionality"
+	@echo "  make perf-test  - Run detailed performance validation"
 	@echo "  make stop       - Stop the demo environment"
 	@echo "  make clean      - Stop and remove everything (including data)"
 	@echo ""
@@ -126,3 +128,14 @@ enable-stats:
 	docker exec pg-tuning-demo psql -U demo_user -d tuning_demo -c "CREATE EXTENSION IF NOT EXISTS pg_stat_statements;"
 	@echo "✅ pg_stat_statements enabled! You can now analyze query performance."
 	@echo "💡 Try: SELECT query, calls, total_exec_time FROM pg_stat_statements LIMIT 5;"
+
+# Validate all use cases and functionality
+validate:
+	@echo "🧪 Validating all PostgreSQL tuning use cases..."
+	./validate-use-cases.sh
+
+# Run detailed performance validation
+perf-test:
+	@echo "⚡ Running detailed performance validation..."
+	@echo "This will test all tuning scenarios with timing measurements..."
+	docker exec pg-tuning-demo psql -U demo_user -d tuning_demo -c "\\i /demo-data/performance-validation.sql"

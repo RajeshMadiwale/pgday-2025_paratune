@@ -1,5 +1,13 @@
 -- PostgreSQL Parameter Tuning Scenarios
 -- Step-by-step exercises for different tuning parameters
+-- 
+-- This file contains practical scenarios for tuning key PostgreSQL parameters:
+-- 1. work_mem - Memory for sorting and grouping operations
+-- 2. shared_buffers - Database buffer cache
+-- 3. effective_cache_size - OS cache size estimate
+-- 4. random_page_cost - Storage speed setting
+--
+-- Usage: \i /demo-data/parameter-tuning-scenarios.sql
 
 -- ========================================
 -- SCENARIO 1: work_mem Tuning
@@ -34,8 +42,16 @@ RESET work_mem;
 -- SCENARIO 2: shared_buffers Impact
 -- ========================================
 
--- Query to test buffer cache effectiveness
--- Run multiple times to see caching effects
+-- shared_buffers is PostgreSQL's main buffer cache
+-- Current setting (check postgresql.conf): shared_buffers = 256MB
+-- This scenario demonstrates buffer cache effectiveness
+
+-- Step 1: Reset statistics to get clean measurements
+SELECT pg_stat_reset();
+
+-- Step 2: Cold cache test - first run will read from disk
+\echo 'COLD CACHE TEST (first run - expect disk reads):'
+\timing on
 EXPLAIN (ANALYZE, BUFFERS)
 SELECT 
     pt.name,
@@ -48,14 +64,91 @@ WHERE pt.random_number BETWEEN 100 AND 200
 GROUP BY pt.id, pt.name, pt.email
 ORDER BY total_amount DESC
 LIMIT 100;
+\timing off
 
--- Check buffer hit ratio after running the query
+-- Check buffer statistics after cold run
 SELECT 
-    'Shared Buffers Hit Ratio' as metric,
-    ROUND(
-        100.0 * sum(blks_hit) / (sum(blks_hit) + sum(blks_read)), 2
-    ) as percentage
-FROM pg_stat_database;
+    'After Cold Cache' as test_phase,
+    sum(blks_read) as disk_reads,
+    sum(blks_hit) as buffer_hits,
+    CASE 
+        WHEN sum(blks_hit) + sum(blks_read) > 0 
+        THEN ROUND(100.0 * sum(blks_hit) / (sum(blks_hit) + sum(blks_read)), 2)
+        ELSE 0 
+    END as hit_ratio_pct
+FROM pg_stat_database 
+WHERE datname = current_database();
+
+-- Step 3: Warm cache test - second run should hit buffer cache
+\echo 'WARM CACHE TEST (second run - expect buffer hits):'
+\timing on
+EXPLAIN (ANALYZE, BUFFERS)
+SELECT 
+    pt.name,
+    pt.email,
+    COUNT(uo.order_id) as order_count,
+    SUM(uo.amount) as total_amount
+FROM performance_test pt
+JOIN user_orders uo ON pt.id = uo.user_id
+WHERE pt.random_number BETWEEN 100 AND 200
+GROUP BY pt.id, pt.name, pt.email
+ORDER BY total_amount DESC
+LIMIT 100;
+\timing off
+
+-- Check buffer statistics after warm run
+SELECT 
+    'After Warm Cache' as test_phase,
+    sum(blks_read) as disk_reads,
+    sum(blks_hit) as buffer_hits,
+    CASE 
+        WHEN sum(blks_hit) + sum(blks_read) > 0 
+        THEN ROUND(100.0 * sum(blks_hit) / (sum(blks_hit) + sum(blks_read)), 2)
+        ELSE 0 
+    END as hit_ratio_pct
+FROM pg_stat_database 
+WHERE datname = current_database();
+
+-- Step 4: Test with different query to show cache persistence
+\echo 'CACHE PERSISTENCE TEST (different query on same tables):'
+\timing on
+SELECT COUNT(*) as total_users, 
+       AVG(random_number) as avg_random
+FROM performance_test 
+WHERE random_number BETWEEN 150 AND 250;
+\timing off
+
+-- Step 5: Buffer cache analysis by table
+SELECT 
+    schemaname,
+    tablename,
+    heap_blks_read,
+    heap_blks_hit,
+    CASE 
+        WHEN heap_blks_hit + heap_blks_read > 0 
+        THEN ROUND(100.0 * heap_blks_hit / (heap_blks_hit + heap_blks_read), 2)
+        ELSE 0 
+    END as table_hit_ratio_pct,
+    idx_blks_read,
+    idx_blks_hit,
+    CASE 
+        WHEN idx_blks_hit + idx_blks_read > 0 
+        THEN ROUND(100.0 * idx_blks_hit / (idx_blks_hit + idx_blks_read), 2)
+        ELSE 0 
+    END as index_hit_ratio_pct
+FROM pg_statio_user_tables
+WHERE heap_blks_read + heap_blks_hit > 0
+ORDER BY heap_blks_read + heap_blks_hit DESC;
+
+-- Exercise: Understanding shared_buffers impact
+-- 1. Low shared_buffers (64MB): More disk I/O, lower hit ratios
+-- 2. Optimal shared_buffers (256MB): Good balance, high hit ratios  
+-- 3. High shared_buffers (1GB): Diminishing returns, may hurt other processes
+
+-- Key metrics to watch:
+-- - Hit ratio should be >90% for frequently accessed data
+-- - 'read' operations in EXPLAIN BUFFERS indicate disk I/O
+-- - 'hit' operations indicate successful buffer cache usage
 
 -- ========================================
 -- SCENARIO 3: effective_cache_size Impact
@@ -304,3 +397,22 @@ SELECT
     pg_size_pretty(temp_bytes) as temp_size
 FROM pg_stat_database 
 WHERE datname = current_database();
+
+-- ========================================
+-- PARAMETER TUNING SUMMARY
+-- ========================================
+
+\echo '=== Parameter Tuning Scenarios Complete ==='
+\echo ''
+\echo 'Key Takeaways:'
+\echo '1. work_mem: Increase to eliminate external sorts (watch for memory usage)'
+\echo '2. shared_buffers: Monitor hit ratios >90% for optimal performance'
+\echo '3. effective_cache_size: Set to 50-75% of total RAM for better planning'
+\echo '4. random_page_cost: Lower for SSDs (1.1) vs HDDs (4.0)'
+\echo ''
+\echo 'Next Steps:'
+\echo '- Run: make monitor (comprehensive monitoring)'
+\echo '- Run: make benchmark (performance testing)'
+\echo '- Run: make perf-test (detailed validation)'
+\echo ''
+\echo '🎯 Ready for production parameter tuning!'
