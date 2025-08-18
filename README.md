@@ -15,6 +15,10 @@ cd  pgday-2025_paratune
 # One-command setup
 make quick-start
 
+If you see error of permission denied then give executable permission
+
+chmod +x pgday-2025_paratune/*
+
 # Connect and start learning
 make connect
 \i /demo-data/step-by-step-tutorial.sql
