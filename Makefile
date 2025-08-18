@@ -16,6 +16,7 @@ help:
 	@echo "  make monitor    - Run comprehensive monitoring dashboard"
 	@echo "  make pgbadger   - Generate pgBadger log analysis report"
 	@echo "  make enable-stats - Enable pg_stat_statements for query analysis"
+	@echo "  make work-mem   - Run comprehensive work_mem tuning scenarios"
 	@echo "  make validate   - Validate all use cases and functionality"
 	@echo "  make perf-test  - Run detailed performance validation"
 	@echo "  make stop       - Stop the demo environment"
@@ -128,6 +129,12 @@ enable-stats:
 	docker exec pg-tuning-demo psql -U demo_user -d tuning_demo -c "CREATE EXTENSION IF NOT EXISTS pg_stat_statements;"
 	@echo "✅ pg_stat_statements enabled! You can now analyze query performance."
 	@echo "💡 Try: SELECT query, calls, total_exec_time FROM pg_stat_statements LIMIT 5;"
+
+# Run comprehensive work_mem tuning scenarios
+work-mem:
+	@echo "🧠 Running comprehensive work_mem tuning scenarios..."
+	@echo "This will demonstrate external sorts, hash joins, and memory optimization..."
+	docker exec pg-tuning-demo psql -U demo_user -d tuning_demo -c "\\i /demo-data/work-mem-tuning.sql"
 
 # Validate all use cases and functionality
 validate:

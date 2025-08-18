@@ -16,8 +16,70 @@
 -- Before tuning: Check current work_mem
 SHOW work_mem;
 
--- Query that will benefit from increased work_mem (sorting/grouping)
--- This query should show "external merge" in EXPLAIN ANALYZE if work_mem is too low
+\echo '=== WORK_MEM TUNING DEMONSTRATION ==='
+\echo 'Testing with different work_mem values to show external sort behavior'
+\echo ''
+
+-- Step 1: Test with very low work_mem (should cause external sorts)
+\echo '--- TEST 1: Low work_mem (1MB) - Expect external sorts ---'
+SET work_mem = '1MB';
+SHOW work_mem;
+
+EXPLAIN (ANALYZE, BUFFERS, VERBOSE)
+SELECT 
+    pt.name,
+    pt.email,
+    uo.order_date,
+    uo.amount,
+    ROW_NUMBER() OVER (PARTITION BY pt.id ORDER BY uo.amount DESC) as order_rank
+FROM performance_test pt
+JOIN user_orders uo ON pt.id = uo.user_id
+WHERE pt.random_number BETWEEN 1 AND 1000
+ORDER BY pt.name, uo.amount DESC;
+
+-- Step 2: Test with medium work_mem
+\echo ''
+\echo '--- TEST 2: Medium work_mem (8MB) - Should reduce external sorts ---'
+SET work_mem = '8MB';
+SHOW work_mem;
+
+EXPLAIN (ANALYZE, BUFFERS, VERBOSE)
+SELECT 
+    pt.name,
+    pt.email,
+    uo.order_date,
+    uo.amount,
+    ROW_NUMBER() OVER (PARTITION BY pt.id ORDER BY uo.amount DESC) as order_rank
+FROM performance_test pt
+JOIN user_orders uo ON pt.id = uo.user_id
+WHERE pt.random_number BETWEEN 1 AND 1000
+ORDER BY pt.name, uo.amount DESC;
+
+-- Step 3: Test with high work_mem (should eliminate external sorts)
+\echo ''
+\echo '--- TEST 3: High work_mem (32MB) - Should eliminate external sorts ---'
+SET work_mem = '32MB';
+SHOW work_mem;
+
+EXPLAIN (ANALYZE, BUFFERS, VERBOSE)
+SELECT 
+    pt.name,
+    pt.email,
+    uo.order_date,
+    uo.amount,
+    ROW_NUMBER() OVER (PARTITION BY pt.id ORDER BY uo.amount DESC) as order_rank
+FROM performance_test pt
+JOIN user_orders uo ON pt.id = uo.user_id
+WHERE pt.random_number BETWEEN 1 AND 1000
+ORDER BY pt.name, uo.amount DESC;
+
+-- Step 4: Complex aggregation query that definitely needs more work_mem
+\echo ''
+\echo '--- TEST 4: Complex aggregation with different work_mem values ---'
+
+-- Low work_mem test
+SET work_mem = '2MB';
+\echo 'Complex query with work_mem = 2MB:'
 EXPLAIN (ANALYZE, BUFFERS)
 SELECT 
     department,
@@ -25,18 +87,54 @@ SELECT
     COUNT(*) as employee_count,
     AVG(salary) as avg_salary,
     STDDEV(salary) as salary_stddev,
-    PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY salary) as median_salary
+    PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY salary) as median_salary,
+    PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY salary) as q1_salary,
+    PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY salary) as q3_salary
 FROM employee_salaries
 GROUP BY department, position
+HAVING COUNT(*) > 10
 ORDER BY department, avg_salary DESC;
 
--- Exercise: Try these work_mem values and compare performance:
--- SET work_mem = '1MB';  -- Low (may cause external sorts)
--- SET work_mem = '8MB';  -- Medium
--- SET work_mem = '32MB'; -- High (should eliminate external sorts)
+-- High work_mem test
+SET work_mem = '16MB';
+\echo ''
+\echo 'Same query with work_mem = 16MB:'
+EXPLAIN (ANALYZE, BUFFERS)
+SELECT 
+    department,
+    position,
+    COUNT(*) as employee_count,
+    AVG(salary) as avg_salary,
+    STDDEV(salary) as salary_stddev,
+    PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY salary) as median_salary,
+    PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY salary) as q1_salary,
+    PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY salary) as q3_salary
+FROM employee_salaries
+GROUP BY department, position
+HAVING COUNT(*) > 10
+ORDER BY department, avg_salary DESC;
+
+-- Step 5: Monitor temp file usage (indicates work_mem pressure)
+\echo ''
+\echo '--- TEMP FILE USAGE MONITORING ---'
+SELECT 
+    datname,
+    temp_files,
+    temp_bytes,
+    pg_size_pretty(temp_bytes) as temp_size_readable
+FROM pg_stat_database 
+WHERE datname = current_database();
 
 -- Reset to session default
 RESET work_mem;
+
+\echo ''
+\echo '=== WORK_MEM TUNING KEY POINTS ==='
+\echo '1. Look for "external merge" or "external sort" in EXPLAIN output'
+\echo '2. Monitor temp_files and temp_bytes in pg_stat_database'
+\echo '3. Higher work_mem reduces disk I/O but uses more memory'
+\echo '4. Set per-session for specific queries, not globally'
+\echo '5. Consider max_connections * work_mem for total memory impact'
 
 -- ========================================
 -- SCENARIO 2: shared_buffers Impact
@@ -121,7 +219,7 @@ WHERE random_number BETWEEN 150 AND 250;
 -- Step 5: Buffer cache analysis by table
 SELECT 
     schemaname,
-    tablename,
+    relname,
     heap_blks_read,
     heap_blks_hit,
     CASE 

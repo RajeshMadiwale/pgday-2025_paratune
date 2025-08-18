@@ -47,12 +47,12 @@ quick-start.bat
 ### Sample Data
 | Table | Records | Use Case |
 |-------|---------|----------|
-| `performance_test` | 100,000 | Query optimization |
-| `user_orders` | 500,000 | JOIN performance |
-| `sales_data` | 200,000 | Partition pruning |
-| `documents` | 50,000 | Full-text search |
-| `user_profiles` | 25,000 | JSONB optimization |
-| `employee_salaries` | 10,000 | Window functions |
+| `performance_test` | 1,000,000 | Query optimization |
+| `user_orders` | 2,000,000 | JOIN performance |
+| `sales_data` | 1,000,000 | Partition pruning |
+| `documents` | 200,000 | Full-text search |
+| `user_profiles` | 100,000 | JSONB optimization |
+| `employee_salaries` | 50,000 | Window functions |
 
 ### Pre-configured Parameters
 ```sql
@@ -110,6 +110,7 @@ log_min_duration_statement = 100ms  -- Slow query logging
 |---------|---------|
 | `make quick-start` | Complete setup with validation |
 | `make connect` | Connect to database |
+| `make work-mem` | Comprehensive work_mem tuning |
 | `make validate` | Test all use cases |
 | `make perf-test` | Performance validation |
 | `make monitor` | Real-time monitoring |
