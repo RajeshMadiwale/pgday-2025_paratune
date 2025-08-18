@@ -13,8 +13,40 @@
 -- SCENARIO 1: work_mem Tuning
 -- ========================================
 
+-- Now let's try with different work_mem values
+-- Try with low work_mem (may cause external sorts)
+
 -- Before tuning: Check current work_mem
 SHOW work_mem;
+
+SET work_mem = '1MB';
+SHOW work_mem;
+
+\timing on
+SELECT 
+    LEFT(name, 10) as name_prefix,
+    COUNT(*) as count,
+    AVG(random_number) as avg_random
+FROM performance_test
+GROUP BY LEFT(name, 10)
+ORDER BY count DESC, avg_random DESC;
+\timing off
+
+-- Try with higher work_mem
+SET work_mem = '16MB';
+SHOW work_mem;
+
+\timing on
+SELECT 
+    LEFT(name, 10) as name_prefix,
+    COUNT(*) as count,
+    AVG(random_number) as avg_random
+FROM performance_test
+GROUP BY LEFT(name, 10)
+ORDER BY count DESC, avg_random DESC;
+\timing off
+
+
 
 \echo '=== WORK_MEM TUNING DEMONSTRATION ==='
 \echo 'Testing with different work_mem values to show external sort behavior'
