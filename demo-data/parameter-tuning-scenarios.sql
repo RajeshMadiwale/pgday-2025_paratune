@@ -349,7 +349,7 @@ SELECT
 FROM documents d
 JOIN user_profiles up ON d.author_id = up.user_id
 WHERE d.category IN ('Technical', 'Business', 'Science')
-  AND up.profile_data->>'age'::int BETWEEN 25 AND 45
+  AND (up.profile_data->>'age')::int BETWEEN 25 AND 45
 ORDER BY d.created_at DESC
 LIMIT 100;
 \timing off
@@ -370,7 +370,7 @@ SELECT
 FROM documents d
 JOIN user_profiles up ON d.author_id = up.user_id
 WHERE d.category IN ('Technical', 'Business', 'Science')
-  AND up.profile_data->>'age'::int BETWEEN 25 AND 45
+  AND (up.profile_data->>'age')::int BETWEEN 25 AND 45
 ORDER BY d.created_at DESC
 LIMIT 100;
 \timing off
@@ -391,7 +391,7 @@ SELECT
 FROM documents d
 JOIN user_profiles up ON d.author_id = up.user_id
 WHERE d.category IN ('Technical', 'Business', 'Science')
-  AND up.profile_data->>'age'::int BETWEEN 25 AND 45
+  AND (up.profile_data->>'age')::int BETWEEN 25 AND 45
 ORDER BY d.created_at DESC
 LIMIT 100;
 \timing off
