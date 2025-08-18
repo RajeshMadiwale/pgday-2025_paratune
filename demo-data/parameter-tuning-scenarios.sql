@@ -23,6 +23,7 @@ SET work_mem = '1MB';
 SHOW work_mem;
 
 \timing on
+EXPLAIN (ANALYZE, BUFFERS, VERBOSE)
 SELECT 
     LEFT(name, 10) as name_prefix,
     COUNT(*) as count,
@@ -37,6 +38,7 @@ SET work_mem = '16MB';
 SHOW work_mem;
 
 \timing on
+EXPLAIN (ANALYZE, BUFFERS, VERBOSE)
 SELECT 
     LEFT(name, 10) as name_prefix,
     COUNT(*) as count,
