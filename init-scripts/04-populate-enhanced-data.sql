@@ -4,11 +4,11 @@
 
 \echo 'Loading enhanced dataset - this may take a few minutes...'
 
--- Increase performance_test table to 1M records
+-- Increase performance_test table records
 INSERT INTO performance_test (name, email, data, random_number)
 SELECT 
-    'User ' || (100000 + generate_series),
-    'user' || (100000 + generate_series) || '@example.com',
+    'User ' || (10000 + generate_series),
+    'user' || (10000 + generate_series) || '@example.com',
     jsonb_build_object(
         'age', (random() * 80 + 18)::int, 
         'city', 'City ' || (random() * 500)::int,
@@ -21,12 +21,12 @@ SELECT
         'score', (random() * 1000)::int
     ),
     (random() * 10000)::int
-FROM generate_series(1, 900000);
+FROM generate_series(1, 90000);
 
--- Increase user_orders to 2M records
+-- Increase user_orders records
 INSERT INTO user_orders (user_id, amount, status, order_date)
 SELECT 
-    (random() * 1000000 + 1)::int,
+    (random() * 10000 + 1)::int,
     (random() * 5000 + 10)::decimal(10,2),
     CASE (random() * 4)::int
         WHEN 0 THEN 'pending'
@@ -35,7 +35,7 @@ SELECT
         ELSE 'shipped'
     END,
     CURRENT_TIMESTAMP - (random() * interval '2 years')
-FROM generate_series(1, 1500000);
+FROM generate_series(1, 150000);
 
 -- Add more partitions and data to sales_data
 CREATE TABLE sales_data_2024_04 PARTITION OF sales_data
@@ -45,7 +45,7 @@ CREATE TABLE sales_data_2024_05 PARTITION OF sales_data
 CREATE TABLE sales_data_2024_06 PARTITION OF sales_data
     FOR VALUES FROM ('2024-06-01') TO ('2024-07-01');
 
--- Increase sales_data to 1M records
+-- Increase sales_data records
 INSERT INTO sales_data (sale_date, customer_id, product_id, quantity, unit_price, total_amount, region, sales_rep_id)
 SELECT 
     '2024-01-01'::date + (random() * 180)::int,
@@ -63,11 +63,11 @@ SELECT
         ELSE 'Oceania'
     END,
     (random() * 200 + 1)::int
-FROM generate_series(1, 800000);
+FROM generate_series(1, 80000);
 
 UPDATE sales_data SET total_amount = quantity * unit_price WHERE total_amount = 0;
 
--- Increase documents to 200K records
+-- Increase documents records
 INSERT INTO documents (title, content, category, author_id, tags)
 SELECT 
     'Document ' || (50000 + generate_series) || ': ' || 
@@ -198,7 +198,7 @@ SELECT
         )
     )
 FROM performance_test pt
-WHERE pt.id > 25000 AND pt.id <= 100000;
+WHERE pt.id > 25000 AND pt.id <= 10000;
 
 -- Increase employee_salaries to 50K records
 INSERT INTO employee_salaries (employee_id, department, position, salary, hire_date, performance_score)
@@ -229,7 +229,7 @@ SELECT
         WHEN 4 THEN 'Architect'
         ELSE 'Consultant'
     END,
-    (random() * 200000 + 35000)::decimal(10,2),
+    (random() * 20000 + 35000)::decimal(10,2),
     '2018-01-01'::date + (random() * 2190)::int,
     (random() * 2 + 2.5)::decimal(3,2)
 FROM generate_series(1, 40000);
