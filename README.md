@@ -281,6 +281,7 @@ You can also document commands to lint the code or run tests. These steps help t
 Show your appreciation to those who have contributed to the project.
 
 1. __Rajesh Madiwale__
+2. __Abbas Ameen__
 
 ## License
 For open source projects, say how it is licensed.
