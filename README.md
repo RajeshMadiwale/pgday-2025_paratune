@@ -280,8 +280,8 @@ You can also document commands to lint the code or run tests. These steps help t
 ## Authors and acknowledgment
 Show your appreciation to those who have contributed to the project.
 
-1. __Rajesh Madiwale__
-2. __Abbas Ameen__
+1. Developer : __Rajesh Madiwale__ 
+2. Testing   : __Abbas Ameen__
 
 ## License
 For open source projects, say how it is licensed.
